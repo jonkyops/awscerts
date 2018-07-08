@@ -1,0 +1,338 @@
+# know for exam
+
+## federation
+
+- in the exam
+  - dev identity broker comm ldap/sts
+  - broker auths ldap, then sts
+  - app gets temp access to aws resouces
+
+## ec2
+
+- difference between on-demand, spot. reserved, dedicated hosts
+- spot - terminate the instance, pay for the hour
+  - if aws terminates, you get the hour for free (price has gone above your bid)
+- ebs
+  - ebs types
+  - iops per type
+  - volumes vs snapshots
+    - volumes exist on ebs
+    - snapshots exist on s3
+    - can take snapshot of volume, this will store volume on s3
+    - snapshot are point in time copies of volumes
+    - snapshots are incremental, meaning only blocks that have changed since last snapshot are moved to s3
+    - snapshots of encrypted vols are encrypted auto
+    - vols restored from enc snaps are enc auto
+    - cant share enc snaps
+    - snaps of root device vol, stop instance first
+  - cannot mount an ebs to multiple instances
+    - use efs instead
+- ebs vs instance store (root vol applies here too)
+  - instance store are ephemeral
+  - instance store cant be stop
+  - if host fails, you will lose data
+  - reboot will not lose data
+  - ebs backed can be stopped, will not lose data (can also tell aws not to delete vol when del instance)
+- take snapshot of raid
+  - stop app from writing to disk
+  - flush all caches (snapshot will not get data cached by os and app)
+  - how? one of these, just stop io:
+    - freeze file system
+    - unmount raid
+    - shut down ec2
+- amis are regional
+- cloudwatch
+  - ec2 standard mon - 5 min
+  - ec2 standard mon - 1 min
+  - for perf monitoring
+    - cloud trail is for auditing
+  - can create dashboards, alarms
+  - events - helps respond to state changes in resources
+  - logs for aggregating monitor and store logs
+- roles can be assigned after ec2 is provisioned
+- know ec2 instance types
+- 1 subnet, 1 availability zone
+- termination protection is turned off by default
+- on ebs-backed instance, default action is for the root ebs volume to be deleted when instance is terminated
+- ebs root volumes of your default amis cannot be encrypted, unless making a copy first.
+  you can also use a third party tool (like bitlocker) to encrypt the root bolume or this can be done when creating amis in the aws console or api
+- security group changes happen immediately
+- security group rules are stateful, ports allowed inbound are also allowed outbound.
+  - i.e. you could have 80 open inbound, but nothing open outbound, and 80 will still be allowed outbound
+  - Network ACLs do NOT work the same way, you need in/outbound rules
+- efs
+  - read after write consistency
+  - block based
+  - multi-az, 1000s of connections nfsv4
+- cli
+  - s3 needs region argument SOMETIMES, depends on region
+  - aws ec2 describe-instances
+  - aws ec2 describe-images
+    - look at filtering for things like windows ebs backed
+  - aws ec2 run-instances actually creates instances
+    - dont confuse with start-instances only starts stopped instances
+  - know ec2 terminate as well
+- lambda - in general, will get a lot of questions
+  - know different types of triggers
+  - how lambda will create a new instance of lambda for each request
+    - 2 requests, 2 instances, 2 responses
+  - response duration has max threshold - 5min
+  - lamda scales out, not up
+  - functions are independent, 1 event = 1 function
+  - lambda functions can trigger other functions, 1 event can = x functions if functions trigger other functions
+  - architectures can get extremely complicated, aws x-ray allows you to debug what's happening
+  - lambda can do things globally, so you can use it to backup s3 buckets to other buckets, etc
+- know what services are serverless
+  - s3
+  - api gateway
+  - lambda
+  - dynamodb
+  - etc
+- know about how to get instance metadata and the url
+  - http://169.254.169.254/latest/meta-data/
+  - know how to get public ip address above/public-ipv4
+- read elb faq
+- know available sdks https://aws.amazon.com/tools
+- some sdks have default regions (when using them, they go to the default region if none is specified)
+  - java - us-east-1
+  - node.js - none
+
+## s3
+
+- successful uploads return http 200
+- data consistency model
+  - read after write for puts
+  - eventual consistency for overwrite puts and deletes (can take some time to propegate)
+- know about acls and bucket policies
+- 3 - 5 hours to restore from glacier
+- s3 charges for
+  - storage
+  - requests
+  - storage management pricing (charging per tag)
+  - data transfer pricing
+    - data coming into s3 is free
+    - region replication is not
+    - transfer acceleration
+- transfer acceleration uses cloudfront edge location to upload through an optimized network path
+- read s3 faq
+- individual objects do not inherit bucket tags
+- min size 0 bytes, max size 5tb
+- enc
+  - client side (encrypt before uploading)
+  - amz s3 managed keys sse-s3
+  - kms sse-kms (keys through kms)
+  - customer provided keys sse-c (provide key)
+- buckets/objects are private by default
+- correct url for static website hosting: http://bucketname.s3-website-region.amazonaws.com
+  - like http://notes.jonkyops.com.s3-website-us-east-1.amazonaws.com
+- know all lambda triggers
+- cloudfront
+  - two types of distributions
+    - web
+    - rtmp (adobe real time messaging protocol) - used for media steaming/flash multi-media content
+  - edge locations are read and write
+    - objects are cached for the life of the TTL (time to live)
+    - you can clear cached objects, but you will be charged
+  - use signed urls/signed cookies to restrict access to content for paid users only
+- performance optimizations for s3
+  - use cloudfront for get intensive workloads
+  - for mixed workloads, avoid sequential key names for objects, add a random prefix
+  
+## serverless
+
+- cors/api gateway
+- api gateway does have caching
+- can throttle it to prevent attacks
+- you can log results to cloudwatch
+- can have multiple versions of lambda functions
+- latest verion use $latest
+- qualified version will use $latest, unqualified will not have it
+- versions are immutable
+- can split traffic using aliases to different veresions
+  - cannot split traffic to $latest, instead create an alias to latest
+- lambda classified as compute
+- api gateway can import from swagger
+- know what step functions are - great way to visualize serverless app
+- step functions auto trigger and track each step
+- logs state of each step for debug
+- xray
+  - sdk gives:
+  - interceptors to add to code to trace incoming http requests
+  - client handlers to instrument aws sdk clients your app uses to call other aws services
+  - http client to instrument calls to other int/ext http web services
+- integrates w/:
+  - elb
+  - lambda
+  - api gateway
+  - ec2
+  - ebs
+- supported languages:
+  - java
+  - go
+  - node.js
+  - python
+  - ruby
+  - .net
+- api gateway
+  - swagger
+    - can use to import from swagger file (remember that it's just the front end and only points to lambda functions, so only specifies types of requests it takes)
+    - supports swagger 2.0
+    - create new api by submitting a post request that includes swagger def in the payload and endpoint configuration
+    - or can update exisiting api by using a put request that contains a swagger def in the payload
+    - can updat e api by overwriting with new def or merge a def with existing api
+    - specify options using a mode query param in request url
+  - api throttling
+    - by default, gateway limits steady-state request rate to 10k requests per second (rps)
+    - max concurrent requests is 5000 across all apis within an aws account
+    - limits can be lifted, but incurs charges
+    - if you go over 10k rps or 5k concurrent, you will get a 429 too many request error response
+    - examples:
+      - 10k in one second spread evently (10 every ms), all get processed
+      - 10k in first ms, api serves 5k and throttles the rest in the one-second period (5k concurrent causes next 1 second to throttle)
+      - 5k in first ms, then evenly spreads another 5k across the rest of the second, all get processed
+  - api gateway can be used as a soap passthrough for legacy apps
+
+## dynamodb
+
+- consists of tables, items, and attributes
+- supports both document and key/value data models
+- support document formats are json, html, xml
+- 2 types of primary key - partition and composite (comb of partition key and sort key)
+- 2 consistency models, strongly consistent and eventually consistent
+- access controlled through iam
+- fine grained access control using iam condition parameter: dynamodb:LeadingKeys to allow users to access only items where parition key matches userid
+- indexes enable fast queries on specific data columns
+- give you a diff view of data, based on alt partition/sort keys
+- important to understand diff
+  local secondary index|global secondary index
+  -|-
+  must be created when creating table|can create at any time
+  same partition key as table|different partition key
+  different sort key|diff sort key
+- queries
+  - can reverse order by setting the ScanIndexForward parameter to false
+    - this param is only related to queries, NOT scans
+- use projectionexpression parameter to refine results for scans/queries
+- query results are always sorted by sort key if one exists
+- sorted in ascending order
+- reduce impact of query or scan by setting a smaller page size, which uses fewer read ops
+- isolate scan operations to specific tables and segregate them from your mission critical traffic
+- try parallel scans, rather than the default sequential scan
+- avoid using scan ops if you can, prefer query, get, or batchgetitems apis
+- understand read/write capacity units
+  - 1x write capacity unit = 1 x 1kb write per sec
+  - 1x read capacity unit =
+    - 1 x strong consistent read of 4kb read per sec
+    - 2x eventual consistent read of 4kb read per sec
+  - round up to nearest whole number when doing calculations
+  - for eventual, just do calculation for strong read, then divide by 2
+- example write calc - write capacity requirement (100x512) byte items per sec:
+  - Size of each item / 1kb (for write capacity units)
+  - 512 / 1kb = .5
+  - round up to nearest whole number, each write will need 1 capacity unit
+  - multiplied by number of writes per second = 1 x 100 = 100 write capacity unit required
+
+## kms/enc
+
+- customer master key
+  - cmk
+    - alias
+    - creation date
+    - description
+    - key state
+    - key marerial (either customer provided or aws provded
+  - can never be exported
+- setup a cmk
+  - create alias and description
+  - choode material option
+  - define key admin permissions
+    - iam users/roles that can admin (nut not use) the key through kms api
+  - define key usage permissions
+    - iam users/roles that can use the key to encrypt/decrypt data
+- key material options
+  - use kms generated key material
+  - your own key material
+- know api calls for kms
+  - aws kms encrypt
+  - aws kms decrypt
+  - aws kms re-encrypt
+  - aws kms enable-key-rotation
+- Envelope keys. the customer master key:
+  - customer master key used to decrypt the data key (envelope key)
+  - envelope key is used to decrypt the data
+
+## other services
+
+- sqs
+  - pull based, not push
+  - messages are 256kb
+  - messages can be kept in the queue from 1 minute to 2 weeks
+  - default retention perio is 4 days
+  - sqs guarantees your messages will be processed at least once
+  - invisibility timeout is the time the message is invisible after a reader picks it up
+    - if processed before the timeout finishes, message will be deleted from queue
+    - default visibility timeout is 30 sec
+    - max 12 hours
+  - standard guarantees messages will be processed at least once, but could be duplicate or out of order
+    - fifo is the alt to this
+  - long polling is another way to get messages.
+    - normally, response from queue is immediate, even if there are no messages
+    - long polling doesn't return a response until a message arrives in the message queue or the poll times out
+- ses vs sns
+  - ses email only
+  - can be used for in/outgoing mail
+  - not sub based, so you only need to know the address
+  - sns supports multple format (sms, sqs, http, email)
+  - push notifications only
+  - pub/sub models - consumers must subscribe to a topic
+  - can fan out messages to large number of recipiencts (ie multiple clients, each with their own sqs queue)
+- know the difference between kineses streams and kineses firehose
+  - streams
+    - accepts data from multiple producers (iot, phone, laptop, etc)
+    - data is stored in shards
+      - default 24 hours, can be increased to 7 days
+      - you specify the amount of shards, so total capacity of stream is based on the number of shards you specify
+    - anything talking about shards will be streams
+    - once data is stored, you have a fleet of ec2s called 'consumers'
+      - consumers take the data, then turn it into something useful ( like groking from elk)
+  - firehose
+    - dont need to manage shards or streams
+    - lambda can analyze the data in real time, so you dont need consumers
+    - no data retention, it's either analyzed immediately or sent directly to s3
+    - can also go to elasticsearch cluster
+- know what kineses analytics is
+  - allows you to run sql queries of data as it exists in firehose or streams
+- elastic beanstalk
+  - deployment policies
+    - all at once
+      - all instances at the same time
+      - all are offline during
+      - there will be an outage
+      - if update fails, rollback is redeploying old version
+    - rolling
+      - deploys new version in batches
+      - each batch of instances is taken out of service during
+      - not ideal for performance sensitive systems
+      - if update fails, need to perform an additional rolling update to roll back changes
+    - rolling w/ additional batch
+      - launches an additional batch of instances w/ new version
+      - maintains full capacity during deploy
+      - if update fails, do another update to roll back chagnes
+    - immutable
+      - new version > fresh group of instances on new autoscaling group
+      - when new instances pass health checks, they're moved to existing group before terminating old instances
+
+## Dev tools
+- know appspec.yml run order of hooks for codedeploy
+- appspec file defines all params needed for deployment
+- for ec2/on premise systems, appsepc must be in root dir
+  - written in yaml/json
+- hook run order for codedeploy deployment
+  - beforeblocktraffic > blocktraffic > afterblocktraffic
+  - applicationstop
+  - beforeinstall
+  - install
+  - afterinstall
+  - applicationstart
+  - validateservice
+  - beforeallowtraffic > allowtraffic > afterallowtraffic

@@ -1,0 +1,10 @@
+{
+    "[markdown]": {
+        "editor.acceptSuggestionOnEnter": "off",
+        "editor.quickSuggestions": {
+            "other": false,
+            "comments": false,
+            "strings": false
+        }
+    }
+}
