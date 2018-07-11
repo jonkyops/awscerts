@@ -44,3 +44,23 @@
   - piss poor wording, meant invisibility timeout. answered 14 days, was 12 hours
 - Max longpolling timeout - 20 sec
   - not discussed
+
+# dev theory quiz
+- When deploying application code to EC2, the AppSpec file can be written in which language?
+  - answered json or yaml, was yaml
+- When deploying application code to Lambda, the AppSpec file can be written in which language? (select 2) 
+  - got this right, but need to remember, since lambda/ec2 are different
+- You want to recieve an email whenever a user pushes code to your CodeCommit repository, how can you configure this?
+  - was not discussed, but still got right
+  - Configure Notifications in the console, this will create a CloudWatch Events rule to send a notification to an SNS topic which will trigger an email to be sent to the user
+    - main thing is that there is an option for 'notifications' in the codecommit service that will do thsi for you
+
+# iam
+<!-- TODO: got this right and understood, but review -->
+- Amazon Cognito provides Web Identity Federation with which of the following features? (Select 2) (Choose 2)
+  - Single sign-on for Active Directory users
+  - Multi-Factor Authentication
+  - * Synchronisation of user data across multiple device types
+  - * Sign-up and sign-in to your applications
+- What does Cognito use to create unique identities for users and authenticate them with Web ID providers?
+  - chose user pools, was identity pools

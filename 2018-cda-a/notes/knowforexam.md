@@ -173,6 +173,11 @@
   - python
   - ruby
   - .net
+- supported app server platforms
+  - tomcat
+  - passenger
+  - puma
+  - iis
 - api gateway
   - swagger
     - can use to import from swagger file (remember that it's just the front end and only points to lambda functions, so only specifies types of requests it takes)
@@ -255,11 +260,12 @@
 - know api calls for kms
   - aws kms encrypt
   - aws kms decrypt
-  - aws kms re-encrypt
+  - aws kms re-encrypt (do not use this for key rotation)
   - aws kms enable-key-rotation
 - Envelope keys. the customer master key:
   - customer master key used to decrypt the data key (envelope key)
   - envelope key is used to decrypt the data
+- keys in kms can never be exported, keys in cloud hsm can
 
 ## other services
 
@@ -295,7 +301,9 @@
     - anything talking about shards will be streams
     - once data is stored, you have a fleet of ec2s called 'consumers'
       - consumers take the data, then turn it into something useful ( like groking from elk)
-  - firehose
+    - video streams - stream video from connected devices to aws for analystics and machine learning
+    - data streams - build custom apps process data in real-time
+  - firehose (near real time)
     - dont need to manage shards or streams
     - lambda can analyze the data in real time, so you dont need consumers
     - no data retention, it's either analyzed immediately or sent directly to s3
@@ -303,6 +311,7 @@
 - know what kineses analytics is
   - allows you to run sql queries of data as it exists in firehose or streams
 - elastic beanstalk
+    # TODO: Know this
   - deployment policies
     - all at once
       - all instances at the same time
@@ -336,3 +345,7 @@
   - applicationstart
   - validateservice
   - beforeallowtraffic > allowtraffic > afterallowtraffic
+
+- advanced iam
+<!-- TODO: know tthis-->
+- know the difference between user/identity pools for cognito
